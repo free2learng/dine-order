@@ -17,7 +17,6 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
   const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '', role: 'staff' })
   const [saving, setSaving] = useState(false)
   const [staffBusy, setStaffBusy] = useState(false)
-  const [showChangePw, setShowChangePw] = useState(false)
   const [changePw, setChangePw] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -41,22 +40,25 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
     if (!showAddStaff || staffBusy) return
     setStaffBusy(true)
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({ email: newStaff.email, password: newStaff.password })
-      if (authError) {
-        const msg = authError.message ?? ''
-        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+      const res = await fetch('/api/create-staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newStaff.email, password: newStaff.password, name: newStaff.name, role: newStaff.role, restaurant_id: showAddStaff }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        const msg: string = data.error ?? 'Failed to create staff'
+        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already been registered') || msg.toLowerCase().includes('already exists')) {
           toast.error('This email is already registered. Please use a different email.')
         } else {
           toast.error(msg)
         }
         return
       }
-      if (!authData.user) throw new Error('No user returned from auth')
-      const { error } = await supabase.from('staff_members').insert({ restaurant_id: showAddStaff, user_id: authData.user.id, name: newStaff.name, role: newStaff.role, active: true })
-      if (error) throw error
-      toast.success(`${newStaff.name} added! They'll receive a confirmation email.`)
+      toast.success(`${newStaff.name} added!`)
       setNewStaff({ name: '', email: '', password: '', role: 'staff' })
       setShowAddStaff(null)
+      fetchRestaurants()
     } catch (err: any) { toast.error(err.message) } finally { setStaffBusy(false) }
   }
   const toggleRestaurant = async (id: number, current: boolean) => {
@@ -75,7 +77,6 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
           <div className="flex gap-2">
             <Button onClick={() => setShowAddForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Restaurant</Button>
             <Button variant="ghost" size="sm" onClick={() => setChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
-            <Button variant="ghost" size="sm" onClick={() => setShowChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>
         </div>
@@ -138,11 +139,16 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
                   <a
                     href={`/${r.slug}/table/T1`}
                     target="_blank"
-                    onClick={() => { if ((r.orders?.[0]?.count ?? 0) === 0) toast.warning('No tables set up yet — create tables first for the preview to work.') }}
+                    onClick={e => {
+                      const noSetup = (r.orders?.[0]?.count ?? 0) === 0 && (r.staff_members?.[0]?.count ?? 0) === 0
+                      if (noSetup) {
+                        e.preventDefault()
+                        toast.warning('This restaurant has no tables yet. Add tables from the staff dashboard first.')
+                      }
+                    }}
                     className="inline-flex items-center h-7 gap-1 rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted transition-colors"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />Preview
-                    {(r.orders?.[0]?.count ?? 0) === 0 && <span className="text-[0.7rem] text-muted-foreground">(create tables first)</span>}
                   </a>
                   <Button size="sm" variant="ghost" onClick={() => toggleRestaurant(r.id, r.active)}>
                     {r.active ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
@@ -172,7 +178,6 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
         </div>
       </div>
       {changePw && <ChangePassword onClose={() => setChangePw(false)} />}
-      {showChangePw && <ChangePassword onClose={() => setShowChangePw(false)} />}
     </div>
   )
 }
