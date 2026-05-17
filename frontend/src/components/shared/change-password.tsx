@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { X, Loader2, KeyRound } from 'lucide-react'
+import { X, Loader2, KeyRound, Eye, EyeOff } from 'lucide-react'
 
 interface Props {
   onClose: () => void
@@ -13,6 +13,9 @@ export function ChangePassword({ onClose }: Props) {
   const [next, setNext]         = useState('')
   const [confirm, setConfirm]   = useState('')
   const [loading, setLoading]   = useState(false)
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNext, setShowNext]       = useState(false)
+  const [showConfirm, setShowConfirm] = useState(false)
   const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -59,37 +62,52 @@ export function ChangePassword({ onClose }: Props) {
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">Current Password</label>
-            <input
-              type="password"
-              value={current}
-              onChange={e => setCurrent(e.target.value)}
-              placeholder="••••••••"
-              required
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                type={showCurrent ? 'text' : 'password'}
+                value={current}
+                onChange={e => setCurrent(e.target.value)}
+                placeholder="••••••••"
+                required
+                className={inputClass + ' pr-10'}
+              />
+              <button type="button" onClick={() => setShowCurrent(!showCurrent)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showCurrent ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">New Password</label>
-            <input
-              type="password"
-              value={next}
-              onChange={e => setNext(e.target.value)}
-              placeholder="Min 6 characters"
-              required
-              minLength={6}
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                type={showNext ? 'text' : 'password'}
+                value={next}
+                onChange={e => setNext(e.target.value)}
+                placeholder="Min 6 characters"
+                required
+                minLength={6}
+                className={inputClass + ' pr-10'}
+              />
+              <button type="button" onClick={() => setShowNext(!showNext)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showNext ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-600">Confirm New Password</label>
-            <input
-              type="password"
-              value={confirm}
-              onChange={e => setConfirm(e.target.value)}
-              placeholder="Repeat new password"
-              required
-              className={inputClass}
-            />
+            <div className="relative">
+              <input
+                type={showConfirm ? 'text' : 'password'}
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                placeholder="Repeat new password"
+                required
+                className={inputClass + ' pr-10'}
+              />
+              <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-1">
