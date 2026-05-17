@@ -16,6 +16,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
   const [newR, setNewR] = useState({ name: '', slug: '', email: '', phone: '', address: '', theme_color: '#c8a96e' })
   const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '', role: 'staff' })
   const [saving, setSaving] = useState(false)
+  const [staffBusy, setStaffBusy] = useState(false)
   const [showChangePw, setShowChangePw] = useState(false)
   const [changePw, setChangePw] = useState(false)
   const router = useRouter()
@@ -27,7 +28,8 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
   const handleAddRestaurant = async (e: React.FormEvent) => {
     e.preventDefault(); setSaving(true)
     try {
-      const { error } = await supabase.from('restaurants').insert({ ...newR, currency: 'EUR', active: true })
+      const slug = newR.slug.toLowerCase().replace(/\s+/g, '-').replace(/-+$/, '').trim()
+      const { error } = await supabase.from('restaurants').insert({ ...newR, slug, currency: 'EUR', active: true })
       if (error) throw error
       toast.success(`${newR.name} added!`)
       setNewR({ name: '', slug: '', email: '', phone: '', address: '', theme_color: '#c8a96e' })
@@ -35,15 +37,27 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
     } catch (err: any) { toast.error(err.message) } finally { setSaving(false) }
   }
   const handleAddStaff = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!showAddStaff) return; setSaving(true)
+    e.preventDefault()
+    if (!showAddStaff || staffBusy) return
+    setStaffBusy(true)
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({ email: newStaff.email, password: newStaff.password })
-      if (authError || !authData.user) throw authError
+      if (authError) {
+        const msg = authError.message ?? ''
+        if (msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already exists')) {
+          toast.error('This email is already registered. Please use a different email.')
+        } else {
+          toast.error(msg)
+        }
+        return
+      }
+      if (!authData.user) throw new Error('No user returned from auth')
       const { error } = await supabase.from('staff_members').insert({ restaurant_id: showAddStaff, user_id: authData.user.id, name: newStaff.name, role: newStaff.role, active: true })
       if (error) throw error
       toast.success(`${newStaff.name} added! They'll receive a confirmation email.`)
-      setNewStaff({ name: '', email: '', password: '', role: 'staff' }); setShowAddStaff(null)
-    } catch (err: any) { toast.error(err.message) } finally { setSaving(false) }
+      setNewStaff({ name: '', email: '', password: '', role: 'staff' })
+      setShowAddStaff(null)
+    } catch (err: any) { toast.error(err.message) } finally { setStaffBusy(false) }
   }
   const toggleRestaurant = async (id: number, current: boolean) => {
     await supabase.from('restaurants').update({ active: !current }).eq('id', id)
@@ -121,7 +135,15 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
                   <span className="text-xs text-muted-foreground flex items-center gap-1"><Users className="w-3.5 h-3.5" />{r.staff_members?.[0]?.count ?? 0} staff</span>
                   <span className="text-xs text-muted-foreground flex items-center gap-1"><ShoppingBag className="w-3.5 h-3.5" />{r.orders?.[0]?.count ?? 0} orders</span>
                   <Button size="sm" variant="outline" onClick={() => setShowAddStaff(r.id)}><Plus className="w-3.5 h-3.5 mr-1" />Add Staff</Button>
-                  <a href={`/${r.slug}/table/T1`} target="_blank" className="inline-flex items-center h-7 gap-1 rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted transition-colors"><ExternalLink className="w-3.5 h-3.5" />Preview</a>
+                  <a
+                    href={`/${r.slug}/table/T1`}
+                    target="_blank"
+                    onClick={() => { if ((r.orders?.[0]?.count ?? 0) === 0) toast.warning('No tables set up yet — create tables first for the preview to work.') }}
+                    className="inline-flex items-center h-7 gap-1 rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium hover:bg-muted transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />Preview
+                    {(r.orders?.[0]?.count ?? 0) === 0 && <span className="text-[0.7rem] text-muted-foreground">(create tables first)</span>}
+                  </a>
                   <Button size="sm" variant="ghost" onClick={() => toggleRestaurant(r.id, r.active)}>
                     {r.active ? <ToggleRight className="w-4 h-4 text-green-600" /> : <ToggleLeft className="w-4 h-4 text-muted-foreground" />}
                   </Button>
@@ -141,7 +163,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
                   </div>
                   <div className="sm:col-span-2 flex gap-2 justify-end">
                     <Button type="button" variant="ghost" size="sm" onClick={() => setShowAddStaff(null)}>Cancel</Button>
-                    <Button type="submit" size="sm" disabled={saving}>{saving ? 'Adding...' : 'Add Staff Member'}</Button>
+                    <Button type="submit" size="sm" disabled={staffBusy}>{staffBusy ? 'Adding...' : 'Add Staff Member'}</Button>
                   </div>
                 </form>
               )}
