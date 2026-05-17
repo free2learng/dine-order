@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     if (!authRes.ok) {
       console.error('[create-staff] auth error:', authJson)
-      return NextResponse.json({ error: authJson.message ?? authJson.error ?? 'Failed to create auth user' }, { status: authRes.status })
+      return NextResponse.json({ error: authJson.msg ?? authJson.message ?? authJson.error_description ?? authJson.error ?? JSON.stringify(authJson) }, { status: authRes.status })
     }
 
     const userId: string = authJson.id
