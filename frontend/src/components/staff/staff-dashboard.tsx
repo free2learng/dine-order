@@ -11,11 +11,12 @@ import { useRouter } from 'next/navigation'
 import { ChangePassword } from '@/components/shared/change-password'
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
-const BG      = '#0a0d12'
-const CARD    = '#181b22'
-const SURFACE = '#111318'
-const SAGE    = '#3d7a5a'
-const BORDER  = 'rgba(255,255,255,0.07)'
+const CREAM    = '#f7f5f0'
+const SAND     = '#e8e2d8'
+const SAGE     = '#3d7a5a'
+const OBSIDIAN = '#2c2c2a'
+const SECONDARY = '#888780'
+const TABS_BG  = '#f0ebe2'
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'ready', 'delivered']
 
@@ -31,42 +32,42 @@ interface StatusCfg {
 
 const STATUS_CONFIG: Record<string, StatusCfg> = {
   pending: {
-    label: 'Pending', color: '#fbbf24', bgColor: 'rgba(245,158,11,0.13)',
-    borderColor: 'rgba(245,158,11,0.35)', leftBorder: '#f59e0b',
+    label: 'Pending', color: '#92400e', bgColor: '#fef3c7',
+    borderColor: '#fde68a', leftBorder: '#f59e0b',
     icon: <Clock size={14} />, actionLabel: 'Confirm',
   },
   confirmed: {
-    label: 'Confirmed', color: '#60a5fa', bgColor: 'rgba(59,130,246,0.13)',
-    borderColor: 'rgba(59,130,246,0.35)', leftBorder: '#3b82f6',
+    label: 'Confirmed', color: '#1e40af', bgColor: '#dbeafe',
+    borderColor: '#bfdbfe', leftBorder: '#3b82f6',
     icon: <CheckCircle2 size={14} />, actionLabel: 'Start Prep',
   },
   preparing: {
-    label: 'Preparing', color: '#fb923c', bgColor: 'rgba(249,115,22,0.13)',
-    borderColor: 'rgba(249,115,22,0.35)', leftBorder: '#f97316',
+    label: 'Preparing', color: '#9a3412', bgColor: '#ffedd5',
+    borderColor: '#fed7aa', leftBorder: '#f97316',
     icon: <ChefHat size={14} />, actionLabel: 'Mark Ready',
   },
   ready: {
-    label: 'Ready', color: '#4ade80', bgColor: 'rgba(34,197,94,0.13)',
-    borderColor: 'rgba(34,197,94,0.35)', leftBorder: '#22c55e',
+    label: 'Ready', color: '#166534', bgColor: '#dcfce7',
+    borderColor: '#bbf7d0', leftBorder: '#22c55e',
     icon: <Bell size={14} />, actionLabel: 'Delivered',
   },
   delivered: {
-    label: 'Delivered', color: '#6b7280', bgColor: 'rgba(107,114,128,0.1)',
-    borderColor: 'rgba(107,114,128,0.25)', leftBorder: '#6b7280',
+    label: 'Delivered', color: SECONDARY, bgColor: '#f3f4f6',
+    borderColor: '#e5e7eb', leftBorder: '#9ca3af',
     icon: <CheckCircle2 size={14} />, actionLabel: '',
   },
   cancelled: {
-    label: 'Cancelled', color: '#f87171', bgColor: 'rgba(239,68,68,0.1)',
-    borderColor: 'rgba(239,68,68,0.25)', leftBorder: '#ef4444',
+    label: 'Cancelled', color: '#991b1b', bgColor: '#fee2e2',
+    borderColor: '#fecaca', leftBorder: '#ef4444',
     icon: <CheckCircle2 size={14} />, actionLabel: '',
   },
 }
 
 const TABLE_STATUS_CONFIG: Record<RestaurantTable['status'], { label: string; color: string; dot: string }> = {
-  available: { label: 'Available', color: '#4ade80', dot: '#22c55e' },
-  occupied:  { label: 'Occupied',  color: '#f87171', dot: '#ef4444' },
-  reserved:  { label: 'Reserved',  color: '#60a5fa', dot: '#3b82f6' },
-  cleaning:  { label: 'Cleaning',  color: '#fbbf24', dot: '#f59e0b' },
+  available: { label: 'Available', color: '#166534', dot: '#22c55e' },
+  occupied:  { label: 'Occupied',  color: '#991b1b', dot: '#ef4444' },
+  reserved:  { label: 'Reserved',  color: '#1e40af', dot: '#3b82f6' },
+  cleaning:  { label: 'Cleaning',  color: '#92400e', dot: '#f59e0b' },
 }
 
 export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
@@ -182,12 +183,12 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
 
   const iconBtn = (onClick: () => void, icon: React.ReactNode, title: string) => (
     <button title={title} onClick={onClick} style={{
-      width: 36, height: 36, borderRadius: 10, border: `1px solid ${BORDER}`,
+      width: 36, height: 36, borderRadius: 10, border: `1px solid ${SAND}`,
       background: 'transparent', cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: 'rgba(255,255,255,0.55)', transition: 'all 0.15s',
+      color: SECONDARY, transition: 'all 0.15s',
     }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+      onMouseEnter={e => (e.currentTarget.style.background = TABS_BG)}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
       {icon}
     </button>
@@ -195,28 +196,28 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif' }}>
+    <div style={{ minHeight: '100vh', background: CREAM, fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif' }}>
       <style>{`
         .staff-scroll::-webkit-scrollbar { height: 4px; }
         .staff-scroll::-webkit-scrollbar-track { background: transparent; }
-        .staff-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 4px; }
+        .staff-scroll::-webkit-scrollbar-thumb { background: ${SAND}; border-radius: 4px; }
       `}</style>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 40,
-        background: SURFACE, borderBottom: `1px solid ${BORDER}`,
-        boxShadow: '0 1px 12px rgba(0,0,0,0.3)',
+        background: 'white', borderBottom: `1px solid ${SAND}`,
+        boxShadow: '0 1px 8px rgba(0,0,0,0.06)',
       }}>
         <div style={{
           maxWidth: 1280, margin: '0 auto', padding: '0 20px',
           height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <h1 style={{ color: 'white', fontWeight: 700, fontSize: 17, margin: 0, lineHeight: 1.2 }}>
+            <h1 style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 17, margin: 0, lineHeight: 1.2 }}>
               {restaurant.name}
             </h1>
-            <p style={{ color: 'rgba(255,255,255,0.38)', fontSize: 12, margin: 0 }}>
+            <p style={{ color: SECONDARY, fontSize: 12, margin: 0 }}>
               {staff.name} · <span style={{ textTransform: 'capitalize' }}>{staff.role}</span>
             </p>
           </div>
@@ -231,22 +232,20 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
       <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px 20px' }}>
 
         {/* ── Stats ─────────────────────────────────────────────────────── */}
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24,
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 24 }}>
           {[
-            { label: "Today's Orders",  value: String(todayStats.orders),                                   valueColor: 'white',   icon: <Users size={16} /> },
-            { label: "Today's Revenue", value: `${currency}${todayStats.revenue.toFixed(2)}`,               valueColor: '#4ade80', icon: <TrendingUp size={16} /> },
-            { label: 'Live Orders',     value: String(liveOrders.length),                                   valueColor: 'white',   icon: <Clock size={16} /> },
-            { label: 'Ready to Serve',  value: String(liveOrders.filter(o => o.status === 'ready').length), valueColor: '#fbbf24', icon: <Bell size={16} /> },
+            { label: "Today's Orders",  value: String(todayStats.orders),                                   valueColor: OBSIDIAN, icon: <Users size={16} /> },
+            { label: "Today's Revenue", value: `${currency}${todayStats.revenue.toFixed(2)}`,               valueColor: SAGE,    icon: <TrendingUp size={16} /> },
+            { label: 'Live Orders',     value: String(liveOrders.length),                                   valueColor: OBSIDIAN, icon: <Clock size={16} /> },
+            { label: 'Ready to Serve',  value: String(liveOrders.filter(o => o.status === 'ready').length), valueColor: '#d97706', icon: <Bell size={16} /> },
           ].map(stat => (
             <div key={stat.label} style={{
-              background: CARD, borderRadius: 14, padding: '16px 18px',
-              border: `1px solid ${BORDER}`, boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+              background: 'white', borderRadius: 14, padding: '16px 18px',
+              border: `1px solid ${SAND}`, boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <span style={{ color: 'rgba(255,255,255,0.35)' }}>{stat.icon}</span>
-                <span style={{ color: 'rgba(255,255,255,0.45)', fontSize: 12 }}>{stat.label}</span>
+                <span style={{ color: SECONDARY }}>{stat.icon}</span>
+                <span style={{ color: SECONDARY, fontSize: 12 }}>{stat.label}</span>
               </div>
               <p style={{ color: stat.valueColor, fontWeight: 700, fontSize: 26, margin: 0, lineHeight: 1 }}>
                 {stat.value}
@@ -256,7 +255,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
         </div>
 
         {/* ── Tabs ──────────────────────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'inline-flex', gap: 4, marginBottom: 20, background: TABS_BG, borderRadius: 100, padding: 4 }}>
           {([
             { key: 'live',   label: `Live Orders (${liveOrders.length})` },
             { key: 'all',    label: 'All Orders' },
@@ -266,11 +265,11 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
               key={tab.key}
               onClick={() => { setActiveTab(tab.key); if (tab.key !== 'tables') setTimeout(fetchOrders, 0) }}
               style={{
-                padding: '8px 18px', borderRadius: 100, fontSize: 13, fontWeight: 600,
+                padding: '7px 18px', borderRadius: 100, fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', transition: 'all 0.15s', border: 'none',
-                background: activeTab === tab.key ? 'white' : CARD,
-                color: activeTab === tab.key ? '#0a0d12' : 'rgba(255,255,255,0.5)',
-                boxShadow: activeTab === tab.key ? '0 2px 10px rgba(255,255,255,0.1)' : 'none',
+                background: activeTab === tab.key ? SAGE : 'transparent',
+                color: activeTab === tab.key ? 'white' : SECONDARY,
+                boxShadow: activeTab === tab.key ? `0 2px 8px ${SAGE}33` : 'none',
               }}>
               {tab.key === 'tables' && (
                 <QrCode size={13} style={{ display: 'inline', marginRight: 6, verticalAlign: 'middle', marginTop: -2 }} />
@@ -302,7 +301,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                     <span style={{ color: cfg.color }}>{cfg.icon}</span>
                     <span style={{ color: cfg.color, fontSize: 13, fontWeight: 700, flex: 1 }}>{cfg.label}</span>
                     <span style={{
-                      background: cfg.bgColor, border: `1px solid ${cfg.borderColor}`,
+                      background: 'white', border: `1px solid ${cfg.borderColor}`,
                       color: cfg.color, borderRadius: 100, fontSize: 11, fontWeight: 700,
                       padding: '1px 8px',
                     }}>
@@ -311,15 +310,15 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                   </div>
                   {/* Order cards */}
                   {groupOrders.map(order => (
-                    <DarkOrderCard key={order.id} order={order} currency={currency}
+                    <LightOrderCard key={order.id} order={order} currency={currency}
                       onAdvance={() => advanceStatus(order)} onCancel={() => cancelOrder(order.id)}
                       updating={updating === order.id} />
                   ))}
                   {groupOrders.length === 0 && (
                     <div style={{
-                      borderRadius: 12, border: `1px dashed ${BORDER}`,
+                      borderRadius: 12, border: `1px dashed ${SAND}`,
                       padding: '28px 0', textAlign: 'center',
-                      color: 'rgba(255,255,255,0.2)', fontSize: 13,
+                      color: '#c4bfb8', fontSize: 13,
                     }}>
                       Empty
                     </div>
@@ -334,12 +333,12 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
         {activeTab === 'all' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {orders.length === 0 && (
-              <p style={{ textAlign: 'center', color: 'rgba(255,255,255,0.3)', padding: '48px 0', margin: 0 }}>
+              <p style={{ textAlign: 'center', color: SECONDARY, padding: '48px 0', margin: 0 }}>
                 No orders yet
               </p>
             )}
             {orders.map(order => (
-              <DarkOrderCard key={order.id} order={order} currency={currency}
+              <LightOrderCard key={order.id} order={order} currency={currency}
                 onAdvance={() => advanceStatus(order)} onCancel={() => cancelOrder(order.id)}
                 updating={updating === order.id} expanded />
             ))}
@@ -350,14 +349,14 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
         {activeTab === 'tables' && (
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 13, margin: 0 }}>
+              <p style={{ color: SECONDARY, fontSize: 13, margin: 0 }}>
                 Scan with any phone camera to open the ordering page.
               </p>
               <button
                 onClick={() => { setTablesLoaded(false); fetchTables() }}
                 style={{
-                  width: 32, height: 32, borderRadius: 8, border: `1px solid ${BORDER}`,
-                  background: 'transparent', cursor: 'pointer', color: 'rgba(255,255,255,0.45)',
+                  width: 32, height: 32, borderRadius: 8, border: `1px solid ${SAND}`,
+                  background: 'transparent', cursor: 'pointer', color: SECONDARY,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                 <RefreshCw size={14} />
@@ -366,40 +365,33 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
 
             {tables.length === 0 && (
               <div style={{
-                borderRadius: 16, border: `1px dashed ${BORDER}`,
+                borderRadius: 16, border: `1px dashed ${SAND}`,
                 padding: '48px 0', textAlign: 'center',
               }}>
-                <QrCode size={32} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: 10 }} />
-                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 14, margin: '0 0 4px' }}>No tables found</p>
-                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, margin: 0 }}>Add tables in the database</p>
+                <QrCode size={32} style={{ color: '#c4bfb8', marginBottom: 10 }} />
+                <p style={{ color: SECONDARY, fontSize: 14, margin: '0 0 4px' }}>No tables found</p>
+                <p style={{ color: '#c4bfb8', fontSize: 12, margin: 0 }}>Add tables in the database</p>
               </div>
             )}
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-              gap: 16,
-            }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 16 }}>
               {tables.map(table => {
                 const stCfg = TABLE_STATUS_CONFIG[table.status] ?? TABLE_STATUS_CONFIG.available
                 return (
                   <div key={table.id} style={{
-                    background: CARD, borderRadius: 16,
-                    border: `1px solid ${BORDER}`, overflow: 'hidden',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+                    background: 'white', borderRadius: 16,
+                    border: `1px solid ${SAND}`, overflow: 'hidden',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.06)',
                   }}>
-                    {/* QR image - white bg for scannability */}
-                    <div style={{
-                      padding: 20, background: 'white',
-                      display: 'flex', justifyContent: 'center',
-                    }}>
+                    {/* QR image */}
+                    <div style={{ padding: 20, background: 'white', display: 'flex', justifyContent: 'center' }}>
                       <div style={{ position: 'relative' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={qrUrl(table.table_number)}
                           alt={`QR for table ${table.table_number}`}
                           width={150} height={150}
-                          style={{ borderRadius: 10, display: 'block' }}
+                          style={{ borderRadius: 10, display: 'block', border: `1px solid ${SAND}` }}
                           loading="lazy"
                         />
                         {/* Logo overlay */}
@@ -413,7 +405,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                             background: restaurant.theme_color || SAGE,
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             color: 'white', fontSize: 12, fontWeight: 700,
-                            boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                           }}>
                             {restaurant.name[0]}
                           </div>
@@ -422,14 +414,14 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                     </div>
 
                     {/* Info */}
-                    <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ padding: '14px 16px', borderTop: `1px solid ${SAND}`, display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div>
-                          <p style={{ color: 'white', fontWeight: 700, fontSize: 14, margin: 0 }}>
+                          <p style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 14, margin: 0 }}>
                             Table {table.table_number}
                           </p>
                           {table.location && (
-                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <p style={{ color: SECONDARY, fontSize: 11, margin: '2px 0 0', display: 'flex', alignItems: 'center', gap: 3 }}>
                               <MapPin size={10} />{table.location}
                             </p>
                           )}
@@ -438,7 +430,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                           display: 'inline-flex', alignItems: 'center', gap: 5,
                           padding: '3px 10px', borderRadius: 100,
                           background: `${stCfg.dot}18`,
-                          border: `1px solid ${stCfg.dot}40`,
+                          border: `1px solid ${stCfg.dot}55`,
                           fontSize: 11, fontWeight: 600, color: stCfg.color,
                         }}>
                           <span style={{ width: 6, height: 6, borderRadius: '50%', background: stCfg.dot, display: 'block' }} />
@@ -447,7 +439,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                       </div>
 
                       {table.capacity && (
-                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <p style={{ color: SECONDARY, fontSize: 11, margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
                           <Users size={10} />Seats {table.capacity}
                         </p>
                       )}
@@ -465,8 +457,8 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                             style={{
                               flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                               padding: '7px 0', borderRadius: 9,
-                              background: 'rgba(255,255,255,0.06)', border: `1px solid ${BORDER}`,
-                              color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                              background: CREAM, border: `1px solid ${SAND}`,
+                              color: SECONDARY, fontSize: 11, fontWeight: 600, cursor: 'pointer',
                             }}>
                             {btn.icon}{btn.label}
                           </button>
@@ -486,8 +478,8 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   )
 }
 
-// ─── Dark Order Card ──────────────────────────────────────────────────────────
-function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expanded }: {
+// ─── Light Order Card ─────────────────────────────────────────────────────────
+function LightOrderCard({ order, currency, onAdvance, onCancel, updating, expanded }: {
   order: any; currency: string; onAdvance: () => void; onCancel: () => void;
   updating: boolean; expanded?: boolean
 }) {
@@ -497,23 +489,23 @@ function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expande
 
   return (
     <div style={{
-      background: CARD, borderRadius: 14,
-      border: `1px solid ${BORDER}`,
-      borderLeft: `4px solid ${cfg.leftBorder}`,
+      background: 'white', borderRadius: 14,
+      border: `1px solid ${SAND}`,
+      borderLeft: `3px solid ${cfg.leftBorder}`,
       padding: '14px 16px',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
       display: 'flex', flexDirection: 'column', gap: 10,
     }}>
       {/* Order meta */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div>
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>#{order.id}</span>
-          <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12, marginLeft: 6 }}>
+          <span style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 14 }}>#{order.id}</span>
+          <span style={{ color: SECONDARY, fontSize: 12, marginLeft: 6 }}>
             · Table {order.restaurant_tables?.table_number}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>{timeAgo}m ago</span>
+          <span style={{ color: '#c4bfb8', fontSize: 11 }}>{timeAgo}m ago</span>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             padding: '3px 9px', borderRadius: 100, fontSize: 11, fontWeight: 600,
@@ -525,17 +517,17 @@ function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expande
       </div>
 
       {order.customer_name && (
-        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 12, margin: 0 }}>👤 {order.customer_name}</p>
+        <p style={{ color: SECONDARY, fontSize: 12, margin: 0 }}>👤 {order.customer_name}</p>
       )}
 
       {/* Items */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
         {order.order_items?.map((item: any) => (
           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+            <span style={{ color: OBSIDIAN, fontSize: 13 }}>
               {item.quantity}× {item.menu_items?.name}
             </span>
-            <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: 12 }}>
+            <span style={{ color: SECONDARY, fontSize: 12 }}>
               {currency}{Number(item.subtotal).toFixed(2)}
             </span>
           </div>
@@ -544,9 +536,9 @@ function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expande
 
       {order.notes && (
         <p style={{
-          fontSize: 12, background: 'rgba(245,158,11,0.1)',
-          border: '1px solid rgba(245,158,11,0.2)',
-          color: '#fbbf24', borderRadius: 8, padding: '6px 10px', margin: 0,
+          fontSize: 12, background: '#fef3c7',
+          border: '1px solid #fde68a',
+          color: '#92400e', borderRadius: 8, padding: '6px 10px', margin: 0,
         }}>
           📝 {order.notes}
         </p>
@@ -555,9 +547,9 @@ function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expande
       {/* Footer */}
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        paddingTop: 10, borderTop: `1px solid ${BORDER}`,
+        paddingTop: 10, borderTop: `1px solid ${SAND}`,
       }}>
-        <span style={{ color: 'white', fontWeight: 700, fontSize: 15 }}>
+        <span style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 15 }}>
           {currency}{Number(order.total).toFixed(2)}
         </span>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -567,8 +559,8 @@ function DarkOrderCard({ order, currency, onAdvance, onCancel, updating, expande
               disabled={updating}
               style={{
                 padding: '5px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600,
-                background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-                color: '#f87171', cursor: 'pointer',
+                background: 'white', border: '1px solid #fecaca',
+                color: '#dc2626', cursor: 'pointer',
               }}>
               Cancel
             </button>
