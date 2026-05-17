@@ -108,6 +108,20 @@ const getEmoji = (name: string) => {
   return '🍴'
 }
 
+const PhoneFrame = ({ children }: { children: React.ReactNode }) => (
+  <div style={{ background: '#1a1a1a', minHeight: '100svh' }}>
+    <div style={{
+      maxWidth: 480,
+      margin: '0 auto',
+      minHeight: '100svh',
+      position: 'relative',
+      boxShadow: '0 0 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
+    }}>
+      {children}
+    </div>
+  </div>
+)
+
 export function CustomerApp({ restaurant, table, categories, menuItems }: Props) {
   const [screen, setScreen] = useState<'welcome' | 'menu' | 'tracking'>(() => {
     if (typeof window === 'undefined') return 'welcome'
@@ -224,6 +238,7 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
   if (screen === 'tracking') {
     const stepIdx = ORDER_STEPS.findIndex(s => s.key === orderStatus)
     return (
+      <PhoneFrame>
       <div style={{
         minHeight: '100svh',
         background: `linear-gradient(160deg, #162b1e 0%, ${OBSIDIAN} 45%, #1c2e22 100%)`,
@@ -354,6 +369,7 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
           )}
         </div>
       </div>
+      </PhoneFrame>
     )
   }
 
@@ -362,6 +378,7 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
   // ═══════════════════════════════════════════════════════════════════════════
   if (screen === 'welcome') {
     return (
+      <PhoneFrame>
       <div style={{
         minHeight: '100svh',
         background: `linear-gradient(160deg, #152619 0%, ${OBSIDIAN} 45%, #1c2e22 100%)`,
@@ -432,6 +449,7 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
           </p>
         </motion.div>
       </div>
+      </PhoneFrame>
     )
   }
 
@@ -439,6 +457,7 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
   // MENU SCREEN
   // ═══════════════════════════════════════════════════════════════════════════
   return (
+    <PhoneFrame>
     <>
       <style>{`
         .dine-ph::placeholder { color: rgba(255,255,255,0.22); }
@@ -951,5 +970,6 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
         </AnimatePresence>
       </div>
     </>
+    </PhoneFrame>
   )
 }
