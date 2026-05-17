@@ -16,6 +16,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
   const [newR, setNewR] = useState({ name: '', slug: '', email: '', phone: '', address: '', theme_color: '#c8a96e' })
   const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '', role: 'staff' })
   const [saving, setSaving] = useState(false)
+  const [showChangePw, setShowChangePw] = useState(false)
   const [changePw, setChangePw] = useState(false)
   const router = useRouter()
   const supabase = createClient()
@@ -60,6 +61,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
           <div className="flex gap-2">
             <Button onClick={() => setShowAddForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Restaurant</Button>
             <Button variant="ghost" size="sm" onClick={() => setChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => setShowChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>
         </div>
@@ -148,6 +150,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
         </div>
       </div>
       {changePw && <ChangePassword onClose={() => setChangePw(false)} />}
+      {showChangePw && <ChangePassword onClose={() => setShowChangePw(false)} />}
     </div>
   )
 }
