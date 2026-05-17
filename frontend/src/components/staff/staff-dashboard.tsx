@@ -2,11 +2,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
-import { Clock, ChefHat, Bell, CheckCircle2, LogOut, RefreshCw, Users, TrendingUp, QrCode, Download, Printer, MapPin } from 'lucide-react'
+import { Clock, ChefHat, Bell, CheckCircle2, LogOut, RefreshCw, Users, TrendingUp, QrCode, Download, Printer, MapPin, KeyRound } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { OrderStatus, RestaurantTable } from '@/types'
 import { useRouter } from 'next/navigation'
+import { ChangePassword } from '@/components/shared/change-password'
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'confirmed', 'preparing', 'ready', 'delivered']
 const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
@@ -31,6 +32,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   const [activeTab, setActiveTab]     = useState<'live' | 'all' | 'tables'>('live')
   const [updating, setUpdating]       = useState<number | null>(null)
   const [todayStats, setTodayStats]   = useState({ orders: 0, revenue: 0 })
+  const [changePw, setChangePw]       = useState(false)
   const [tablesLoaded, setTablesLoaded] = useState(false)
   const router  = useRouter()
   const supabase = createClient()
@@ -106,7 +108,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   // ── QR code helpers ───────────────────────────────────────────────────────
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const origin = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
   const tableUrl = (tableNumber: string) => `${origin}/${restaurant.slug}/table/${tableNumber}`
   const qrUrl    = (tableNumber: string, size = 200) =>
     `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(tableUrl(tableNumber))}`
@@ -154,6 +156,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => { fetchOrders(); fetchStats() }}><RefreshCw className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="sm" onClick={() => setChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>
         </div>
@@ -337,6 +340,7 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
           </div>
         )}
       </div>
+      {changePw && <ChangePassword onClose={() => setChangePw(false)} />}
     </div>
   )
 }

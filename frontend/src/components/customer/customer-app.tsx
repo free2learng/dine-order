@@ -97,7 +97,11 @@ const currencySymbol = (r: Restaurant) => (r.currency === 'EUR' ? '€' : (r.cur
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export function CustomerApp({ restaurant, table, categories, menuItems }: Props) {
-  const [screen, setScreen]             = useState<'welcome' | 'menu' | 'tracking'>('welcome')
+  const [screen, setScreen]             = useState<'welcome' | 'menu' | 'tracking'>(() => {
+    if (typeof window === 'undefined') return 'welcome'
+    const saved = localStorage.getItem(`dineorder-${restaurant.id}-${table.id}-orderId`)
+    return saved ? 'tracking' : 'welcome'
+  })
   const [activeCat, setActiveCat]       = useState<number | null>(categories[0]?.id ?? null)
   const [selected, setSelected]         = useState<MenuItem | null>(null)
   const [cartOpen, setCartOpen]         = useState(false)
@@ -105,8 +109,15 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
   const [customerName, setCustomerName] = useState('')
   const [orderNotes, setOrderNotes]     = useState('')
   const [placing, setPlacing]           = useState(false)
-  const [orderId, setOrderId]           = useState<number | null>(null)
-  const [orderStatus, setOrderStatus]   = useState<OrderStatus>('pending')
+  const [orderId, setOrderId]           = useState<number | null>(() => {
+    if (typeof window === 'undefined') return null
+    const saved = localStorage.getItem(`dineorder-${restaurant.id}-${table.id}-orderId`)
+    return saved ? Number(saved) : null
+  })
+  const [orderStatus, setOrderStatus]   = useState<OrderStatus>(() => {
+    if (typeof window === 'undefined') return 'pending'
+    return (localStorage.getItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`) as OrderStatus) || 'pending'
+  })
   const tabsRef = useRef<HTMLDivElement>(null)
 
   const { items, addItem, removeItem, updateQuantity, clearCart, total, itemCount, setTable } = useCartStore()
@@ -142,7 +153,10 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
     if (!orderId) return
     const channel = supabase.channel(`order-${orderId}`)
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
-        (payload) => setOrderStatus(payload.new.status as OrderStatus))
+        (payload) => {
+          setOrderStatus(payload.new.status as OrderStatus)
+          localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`, payload.new.status)
+        })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [orderId])
@@ -189,6 +203,8 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
 
       setOrderId(order.id)
       setOrderStatus('pending')
+      localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderId`, String(order.id))
+      localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`, 'pending')
       clearCart()
       setCartOpen(false)
       setScreen('tracking')
@@ -272,7 +288,12 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
 
           {orderStatus === 'delivered' ? (
             <motion.button variants={fadeUp}
-              onClick={() => { setScreen('menu'); setOrderId(null) }}
+              onClick={() => { 
+                setScreen('menu'); 
+                setOrderId(null)
+                localStorage.removeItem(`dineorder-${restaurant.id}-${table.id}-orderId`)
+                localStorage.removeItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`)
+              }}
               className="w-full py-3.5 rounded-2xl font-semibold text-white"
               style={{ background: themeColor }}>
               Order Again

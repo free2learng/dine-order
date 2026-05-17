@@ -3,11 +3,12 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Plus, LogOut, Building2, Users, ToggleLeft, ToggleRight, ExternalLink, ShoppingBag } from 'lucide-react'
+import { Plus, LogOut, Building2, Users, ToggleLeft, ToggleRight, ExternalLink, ShoppingBag, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ChangePassword } from '@/components/shared/change-password'
 export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurants }: any) {
   const [restaurants, setRestaurants] = useState<any[]>(initialRestaurants)
   const [showAddForm, setShowAddForm] = useState(false)
@@ -15,6 +16,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
   const [newR, setNewR] = useState({ name: '', slug: '', email: '', phone: '', address: '', theme_color: '#c8a96e' })
   const [newStaff, setNewStaff] = useState({ name: '', email: '', password: '', role: 'staff' })
   const [saving, setSaving] = useState(false)
+  const [changePw, setChangePw] = useState(false)
   const router = useRouter()
   const supabase = createClient()
   const fetchRestaurants = async () => {
@@ -57,6 +59,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
           </div>
           <div className="flex gap-2">
             <Button onClick={() => setShowAddForm(true)} size="sm"><Plus className="w-4 h-4 mr-1" />Add Restaurant</Button>
+            <Button variant="ghost" size="sm" onClick={() => setChangePw(true)}><KeyRound className="w-4 h-4" /></Button>
             <Button variant="ghost" size="sm" onClick={handleLogout}><LogOut className="w-4 h-4" /></Button>
           </div>
         </div>
@@ -144,6 +147,7 @@ export function SuperAdminDashboard({ superAdmin, restaurants: initialRestaurant
           ))}
         </div>
       </div>
+      {changePw && <ChangePassword onClose={() => setChangePw(false)} />}
     </div>
   )
 }
