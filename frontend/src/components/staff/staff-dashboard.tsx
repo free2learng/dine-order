@@ -5,8 +5,9 @@ import { toast } from 'sonner'
 import {
   Clock, ChefHat, Bell, CheckCircle2, LogOut, RefreshCw,
   Users, TrendingUp, QrCode, Download, Printer, MapPin, KeyRound,
+  Plus, Trash2,
 } from 'lucide-react'
-import type { OrderStatus, RestaurantTable } from '@/types'
+import type { OrderStatus, RestaurantTable, Category, MenuItem } from '@/types'
 import { useRouter } from 'next/navigation'
 import { ChangePassword } from '@/components/shared/change-password'
 
@@ -70,14 +71,65 @@ const TABLE_STATUS_CONFIG: Record<RestaurantTable['status'], { label: string; co
   cleaning:  { label: 'Cleaning',  color: '#92400e', dot: '#f59e0b' },
 }
 
+// ── Food image mapping (matches customer app) ──────────────────────────────────
+const FOOD_IMAGES: Record<string, string> = {
+  'calamari':   'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=400&h=300&fit=crop',
+  'wings':      'https://images.unsplash.com/photo-1567620832903-9fc6debc209f?w=400&h=300&fit=crop',
+  'flatbread':  'https://images.unsplash.com/photo-1541745537411-b8046dc6d66c?w=400&h=300&fit=crop',
+  'nachos':     'https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=400&h=300&fit=crop',
+  'soup':       'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&h=300&fit=crop',
+  'salmon':     'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400&h=300&fit=crop',
+  'chicken':    'https://images.unsplash.com/photo-1598103442097-8b74394b95c3?w=400&h=300&fit=crop',
+  'pasta':      'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=300&fit=crop',
+  'brisket':    'https://images.unsplash.com/photo-1544025162-d76538961a07?w=400&h=300&fit=crop',
+  'fish':       'https://images.unsplash.com/photo-1580476262798-bddd9f4b7369?w=400&h=300&fit=crop',
+  'burger':     'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+  'bbq':        'https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=400&h=300&fit=crop',
+  'plant':      'https://images.unsplash.com/photo-1520072959219-c595dc870360?w=400&h=300&fit=crop',
+  'chips':      'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&h=300&fit=crop',
+  'fries':      'https://images.unsplash.com/photo-1576107232684-1279f390859f?w=400&h=300&fit=crop',
+  'slaw':       'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+  'onion':      'https://images.unsplash.com/photo-1639024471283-03518883512d?w=400&h=300&fit=crop',
+  'corn':       'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400&h=300&fit=crop',
+  'toffee':     'https://images.unsplash.com/photo-1588195538326-c5b1e9f80a1b?w=400&h=300&fit=crop',
+  'brownie':    'https://images.unsplash.com/photo-1515037893149-de7f840978e2?w=400&h=300&fit=crop',
+  'cheesecake': 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=400&h=300&fit=crop',
+  'sorbet':     'https://images.unsplash.com/photo-1488900128323-21503983a07e?w=400&h=300&fit=crop',
+  'cola':       'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=400&h=300&fit=crop',
+  'water':      'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=400&h=300&fit=crop',
+  'juice':      'https://images.unsplash.com/photo-1621506289937-a8e4df240d0b?w=400&h=300&fit=crop',
+  'lemonade':   'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=300&fit=crop',
+  'martini':    'https://images.unsplash.com/photo-1574096079513-d8259312b785?w=400&h=300&fit=crop',
+  'spritz':     'https://images.unsplash.com/photo-1560508179-b2c9a3555772?w=400&h=300&fit=crop',
+  'mojito':     'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=400&h=300&fit=crop',
+  'default':    'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&h=300&fit=crop',
+}
+
+const foodImg = (name: string, imageUrl?: string | null): string => {
+  if (imageUrl) return imageUrl
+  const lower = name.toLowerCase()
+  const key = Object.keys(FOOD_IMAGES).find(k => lower.includes(k))
+  return key ? FOOD_IMAGES[key] : FOOD_IMAGES['default']
+}
+
 export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   const [orders, setOrders]             = useState<any[]>(initialOrders)
   const [tables, setTables]             = useState<RestaurantTable[]>([])
-  const [activeTab, setActiveTab]       = useState<'live' | 'all' | 'tables'>('live')
+  const [activeTab, setActiveTab]       = useState<'live' | 'all' | 'tables' | 'menu'>('live')
   const [updating, setUpdating]         = useState<number | null>(null)
   const [todayStats, setTodayStats]     = useState({ orders: 0, revenue: 0 })
   const [changePw, setChangePw]         = useState(false)
   const [tablesLoaded, setTablesLoaded] = useState(false)
+  // Menu tab state
+  const [menuItems, setMenuItems]       = useState<MenuItem[]>([])
+  const [menuCats, setMenuCats]         = useState<Category[]>([])
+  const [menuLoaded, setMenuLoaded]     = useState(false)
+  const [editingItemId, setEditingItemId] = useState<number | null>(null)
+  const [editForm, setEditForm]         = useState({ name: '', description: '', price: '', allergens: '', calories: '' })
+  const [addCatId, setAddCatId]         = useState<number | null>(null)
+  const [addForm, setAddForm]           = useState({ name: '', description: '', price: '', allergens: '', calories: '' })
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null)
+  const [menuBusy, setMenuBusy]         = useState(false)
   const router   = useRouter()
   const supabase = createClient()
   const currency = restaurant.currency === 'EUR' ? '€' : restaurant.currency
@@ -117,6 +169,16 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
     if (data) { setTables(data); setTablesLoaded(true) }
   }, [restaurant.id, tablesLoaded]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  const fetchMenu = useCallback(async () => {
+    const [{ data: items }, { data: cats }] = await Promise.all([
+      supabase.from('menu_items').select('*').eq('restaurant_id', restaurant.id).order('name'),
+      supabase.from('categories').select('*').eq('restaurant_id', restaurant.id).order('display_order'),
+    ])
+    if (items) setMenuItems(items as MenuItem[])
+    if (cats) setMenuCats(cats as Category[])
+    setMenuLoaded(true)
+  }, [restaurant.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     fetchOrders(); fetchStats()
     const channel = supabase.channel('orders-realtime')
@@ -129,6 +191,10 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   useEffect(() => {
     if (activeTab === 'tables') fetchTables()
   }, [activeTab, fetchTables])
+
+  useEffect(() => {
+    if (activeTab === 'menu' && !menuLoaded) fetchMenu()
+  }, [activeTab, menuLoaded, fetchMenu])
 
   // ── Order actions ─────────────────────────────────────────────────────────
   const advanceStatus = async (order: any) => {
@@ -150,6 +216,63 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
   }
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
+
+  // ── Menu actions ──────────────────────────────────────────────────────────
+  const toggleMenuItemAvailable = async (item: MenuItem) => {
+    setMenuBusy(true)
+    try {
+      await supabase.from('menu_items').update({ available: !item.available }).eq('id', item.id)
+      setMenuItems(prev => prev.map(i => i.id === item.id ? { ...i, available: !i.available } : i))
+    } catch { toast.error('Failed to update') } finally { setMenuBusy(false) }
+  }
+
+  const saveMenuItemEdit = async (itemId: number) => {
+    if (!editForm.name.trim()) { toast.error('Name is required'); return }
+    setMenuBusy(true)
+    try {
+      await supabase.from('menu_items').update({
+        name: editForm.name.trim(),
+        description: editForm.description.trim() || null,
+        price: parseFloat(editForm.price) || 0,
+        allergens: editForm.allergens.trim() || null,
+        calories: editForm.calories ? parseInt(editForm.calories) : null,
+      }).eq('id', itemId)
+      toast.success('Item updated')
+      setEditingItemId(null)
+      await fetchMenu()
+    } catch { toast.error('Failed to save') } finally { setMenuBusy(false) }
+  }
+
+  const deleteMenuItem = async (itemId: number) => {
+    setMenuBusy(true)
+    try {
+      await supabase.from('menu_items').delete().eq('id', itemId)
+      toast.success('Item deleted')
+      setDeleteConfirmId(null)
+      await fetchMenu()
+    } catch { toast.error('Failed to delete') } finally { setMenuBusy(false) }
+  }
+
+  const addMenuItem = async (categoryId: number) => {
+    if (!addForm.name.trim()) { toast.error('Name is required'); return }
+    setMenuBusy(true)
+    try {
+      await supabase.from('menu_items').insert({
+        restaurant_id: restaurant.id,
+        category_id: categoryId,
+        name: addForm.name.trim(),
+        description: addForm.description.trim() || null,
+        price: parseFloat(addForm.price) || 0,
+        allergens: addForm.allergens.trim() || null,
+        calories: addForm.calories ? parseInt(addForm.calories) : null,
+        available: true,
+      })
+      toast.success('Item added')
+      setAddCatId(null)
+      setAddForm({ name: '', description: '', price: '', allergens: '', calories: '' })
+      await fetchMenu()
+    } catch { toast.error('Failed to add') } finally { setMenuBusy(false) }
+  }
 
   // ── QR helpers ────────────────────────────────────────────────────────────
   const origin   = process.env.NEXT_PUBLIC_APP_URL || (typeof window !== 'undefined' ? window.location.origin : '')
@@ -260,10 +383,11 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
             { key: 'live',   label: `Live Orders (${liveOrders.length})` },
             { key: 'all',    label: 'All Orders' },
             { key: 'tables', label: `Tables${tables.length ? ` (${tables.length})` : ''}` },
+            { key: 'menu',   label: `Menu${menuLoaded ? ` (${menuItems.length})` : ''}` },
           ] as const).map(tab => (
             <button
               key={tab.key}
-              onClick={() => { setActiveTab(tab.key); if (tab.key !== 'tables') setTimeout(fetchOrders, 0) }}
+              onClick={() => { setActiveTab(tab.key); if (tab.key !== 'tables' && tab.key !== 'menu') setTimeout(fetchOrders, 0) }}
               style={{
                 padding: '7px 18px', borderRadius: 100, fontSize: 13, fontWeight: 600,
                 cursor: 'pointer', transition: 'all 0.15s', border: 'none',
@@ -469,6 +593,404 @@ export function StaffDashboard({ staff, restaurant, initialOrders }: any) {
                 )
               })}
             </div>
+          </div>
+        )}
+
+        {/* ── Menu ──────────────────────────────────────────────────────── */}
+        {activeTab === 'menu' && (
+          <div>
+            {/* Toolbar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <p style={{ color: SECONDARY, fontSize: 13, margin: 0 }}>
+                {menuLoaded
+                  ? `${menuItems.length} item${menuItems.length !== 1 ? 's' : ''} across ${menuCats.length} categor${menuCats.length !== 1 ? 'ies' : 'y'}`
+                  : 'Loading…'}
+              </p>
+              <button
+                onClick={fetchMenu}
+                style={{
+                  width: 32, height: 32, borderRadius: 8, border: `1px solid ${SAND}`,
+                  background: 'transparent', cursor: 'pointer', color: SECONDARY,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                <RefreshCw size={14} />
+              </button>
+            </div>
+
+            {menuLoaded && menuCats.length === 0 && (
+              <div style={{
+                borderRadius: 16, border: `1px dashed ${SAND}`,
+                padding: '48px 0', textAlign: 'center',
+              }}>
+                <p style={{ color: SECONDARY, fontSize: 14, margin: '0 0 4px' }}>No categories found</p>
+                <p style={{ color: '#c4bfb8', fontSize: 12, margin: 0 }}>Add categories in the database first</p>
+              </div>
+            )}
+
+            {menuCats.map(cat => {
+              const catItems = menuItems.filter(i => i.category_id === cat.id)
+              return (
+                <div key={cat.id} style={{ marginBottom: 32 }}>
+                  {/* Category header */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    marginBottom: 12, paddingBottom: 12, borderBottom: `2px solid ${SAND}`,
+                  }}>
+                    <h3 style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 16, margin: 0 }}>
+                      {cat.name}
+                      <span style={{ color: SECONDARY, fontSize: 13, fontWeight: 400, marginLeft: 8 }}>
+                        ({catItems.length})
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => {
+                        setAddCatId(addCatId === cat.id ? null : cat.id)
+                        setAddForm({ name: '', description: '', price: '', allergens: '', calories: '' })
+                        setEditingItemId(null)
+                      }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        padding: '6px 14px', borderRadius: 9,
+                        background: addCatId === cat.id ? TABS_BG : SAGE,
+                        border: addCatId === cat.id ? `1px solid ${SAND}` : 'none',
+                        cursor: 'pointer', color: addCatId === cat.id ? SECONDARY : 'white',
+                        fontSize: 12, fontWeight: 600,
+                      }}>
+                      <Plus size={13} />
+                      {addCatId === cat.id ? 'Cancel' : 'Add Item'}
+                    </button>
+                  </div>
+
+                  {/* Add item form */}
+                  {addCatId === cat.id && (
+                    <div style={{
+                      background: 'white', borderRadius: 14, padding: 16, marginBottom: 12,
+                      border: `1px solid ${SAND}`, boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                    }}>
+                      <p style={{ color: OBSIDIAN, fontWeight: 600, fontSize: 14, margin: '0 0 12px' }}>New Item in {cat.name}</p>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <input
+                            placeholder="Name *"
+                            value={addForm.name}
+                            onChange={e => setAddForm(f => ({ ...f, name: e.target.value }))}
+                            style={{
+                              width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                              borderRadius: 8, border: `1px solid ${SAND}`,
+                              background: CREAM, color: OBSIDIAN, fontSize: 13, outline: 'none',
+                            }}
+                          />
+                        </div>
+                        <input
+                          placeholder="Price *"
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={addForm.price}
+                          onChange={e => setAddForm(f => ({ ...f, price: e.target.value }))}
+                          style={{
+                            width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                            borderRadius: 8, border: `1px solid ${SAND}`,
+                            background: CREAM, color: OBSIDIAN, fontSize: 13, outline: 'none',
+                          }}
+                        />
+                        <input
+                          placeholder="Calories"
+                          type="number"
+                          min="0"
+                          value={addForm.calories}
+                          onChange={e => setAddForm(f => ({ ...f, calories: e.target.value }))}
+                          style={{
+                            width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                            borderRadius: 8, border: `1px solid ${SAND}`,
+                            background: CREAM, color: OBSIDIAN, fontSize: 13, outline: 'none',
+                          }}
+                        />
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <textarea
+                            placeholder="Description"
+                            value={addForm.description}
+                            onChange={e => setAddForm(f => ({ ...f, description: e.target.value }))}
+                            rows={2}
+                            style={{
+                              width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                              borderRadius: 8, border: `1px solid ${SAND}`,
+                              background: CREAM, color: OBSIDIAN, fontSize: 13, outline: 'none',
+                              resize: 'none',
+                            }}
+                          />
+                        </div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <input
+                            placeholder="Allergens"
+                            value={addForm.allergens}
+                            onChange={e => setAddForm(f => ({ ...f, allergens: e.target.value }))}
+                            style={{
+                              width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                              borderRadius: 8, border: `1px solid ${SAND}`,
+                              background: CREAM, color: OBSIDIAN, fontSize: 13, outline: 'none',
+                            }}
+                          />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                        <button
+                          onClick={() => setAddCatId(null)}
+                          style={{
+                            padding: '7px 16px', borderRadius: 9, fontSize: 13, fontWeight: 600,
+                            background: TABS_BG, border: `1px solid ${SAND}`, color: SECONDARY, cursor: 'pointer',
+                          }}>
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => addMenuItem(cat.id)}
+                          disabled={menuBusy}
+                          style={{
+                            padding: '7px 16px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                            background: SAGE, border: 'none', color: 'white',
+                            cursor: menuBusy ? 'not-allowed' : 'pointer', opacity: menuBusy ? 0.6 : 1,
+                          }}>
+                          {menuBusy ? '…' : 'Add Item'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Item cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {catItems.map(item => (
+                      <div key={item.id} style={{
+                        background: 'white', borderRadius: 14,
+                        border: `1px solid ${SAND}`,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                        overflow: 'hidden',
+                      }}>
+                        {/* Card row */}
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: 14 }}>
+                          {/* Image */}
+                          <div style={{
+                            width: 72, height: 72, borderRadius: 10, overflow: 'hidden',
+                            flexShrink: 0, background: SAND,
+                          }}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={foodImg(item.name, item.image_url)}
+                              alt={item.name}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                              loading="lazy"
+                            />
+                          </div>
+
+                          {/* Info */}
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ color: OBSIDIAN, fontWeight: 700, fontSize: 14, margin: '0 0 3px' }}>
+                              {item.name}
+                            </p>
+                            {item.description && (
+                              <p style={{ color: SECONDARY, fontSize: 12, margin: '0 0 5px', lineHeight: 1.4 }}>
+                                {item.description}
+                              </p>
+                            )}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                              <span style={{ color: SAGE, fontWeight: 700, fontSize: 14 }}>
+                                {currency}{Number(item.price).toFixed(2)}
+                              </span>
+                              {item.calories != null && (
+                                <span style={{ color: SECONDARY, fontSize: 11 }}>{item.calories} kcal</span>
+                              )}
+                              {item.allergens && (
+                                <span style={{ color: '#b45309', fontSize: 11 }}>⚠️ {item.allergens}</span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Actions column */}
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, alignItems: 'flex-end' }}>
+                            {/* Available toggle */}
+                            <button
+                              onClick={() => toggleMenuItemAvailable(item)}
+                              disabled={menuBusy}
+                              style={{
+                                padding: '4px 12px', borderRadius: 100, border: 'none',
+                                fontSize: 11, fontWeight: 600, cursor: menuBusy ? 'not-allowed' : 'pointer',
+                                background: item.available ? '#dcfce7' : '#fee2e2',
+                                color: item.available ? '#166534' : '#991b1b',
+                              }}>
+                              {item.available ? 'Available' : 'Unavailable'}
+                            </button>
+
+                            {/* Edit + Delete */}
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <button
+                                onClick={() => {
+                                  if (editingItemId === item.id) {
+                                    setEditingItemId(null)
+                                  } else {
+                                    setEditingItemId(item.id)
+                                    setEditForm({
+                                      name: item.name,
+                                      description: item.description ?? '',
+                                      price: String(item.price),
+                                      allergens: item.allergens ?? '',
+                                      calories: item.calories != null ? String(item.calories) : '',
+                                    })
+                                    setDeleteConfirmId(null)
+                                  }
+                                }}
+                                style={{
+                                  padding: '5px 12px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                  background: editingItemId === item.id ? TABS_BG : CREAM,
+                                  border: `1px solid ${SAND}`, color: SECONDARY, cursor: 'pointer',
+                                }}>
+                                {editingItemId === item.id ? 'Cancel' : 'Edit'}
+                              </button>
+
+                              {deleteConfirmId === item.id ? (
+                                <div style={{ display: 'flex', gap: 4 }}>
+                                  <button
+                                    onClick={() => deleteMenuItem(item.id)}
+                                    disabled={menuBusy}
+                                    style={{
+                                      padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                      background: '#fee2e2', border: '1px solid #fecaca',
+                                      color: '#dc2626', cursor: menuBusy ? 'not-allowed' : 'pointer',
+                                    }}>
+                                    {menuBusy ? '…' : 'Confirm'}
+                                  </button>
+                                  <button
+                                    onClick={() => setDeleteConfirmId(null)}
+                                    style={{
+                                      padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                      background: CREAM, border: `1px solid ${SAND}`, color: SECONDARY, cursor: 'pointer',
+                                    }}>
+                                    No
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => { setDeleteConfirmId(item.id); setEditingItemId(null) }}
+                                  style={{
+                                    padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 600,
+                                    background: 'white', border: '1px solid #fecaca',
+                                    color: '#dc2626', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: 4,
+                                  }}>
+                                  <Trash2 size={11} />Delete
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Inline edit form */}
+                        {editingItemId === item.id && (
+                          <div style={{
+                            padding: '14px 16px', borderTop: `1px solid ${SAND}`,
+                            background: CREAM,
+                          }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <input
+                                  placeholder="Name *"
+                                  value={editForm.name}
+                                  onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
+                                  style={{
+                                    width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                                    borderRadius: 8, border: `1px solid ${SAND}`,
+                                    background: 'white', color: OBSIDIAN, fontSize: 13, outline: 'none',
+                                  }}
+                                />
+                              </div>
+                              <input
+                                placeholder="Price"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={editForm.price}
+                                onChange={e => setEditForm(f => ({ ...f, price: e.target.value }))}
+                                style={{
+                                  width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                                  borderRadius: 8, border: `1px solid ${SAND}`,
+                                  background: 'white', color: OBSIDIAN, fontSize: 13, outline: 'none',
+                                }}
+                              />
+                              <input
+                                placeholder="Calories"
+                                type="number"
+                                min="0"
+                                value={editForm.calories}
+                                onChange={e => setEditForm(f => ({ ...f, calories: e.target.value }))}
+                                style={{
+                                  width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                                  borderRadius: 8, border: `1px solid ${SAND}`,
+                                  background: 'white', color: OBSIDIAN, fontSize: 13, outline: 'none',
+                                }}
+                              />
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <textarea
+                                  placeholder="Description"
+                                  value={editForm.description}
+                                  onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))}
+                                  rows={2}
+                                  style={{
+                                    width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                                    borderRadius: 8, border: `1px solid ${SAND}`,
+                                    background: 'white', color: OBSIDIAN, fontSize: 13, outline: 'none',
+                                    resize: 'none',
+                                  }}
+                                />
+                              </div>
+                              <div style={{ gridColumn: '1 / -1' }}>
+                                <input
+                                  placeholder="Allergens"
+                                  value={editForm.allergens}
+                                  onChange={e => setEditForm(f => ({ ...f, allergens: e.target.value }))}
+                                  style={{
+                                    width: '100%', padding: '8px 10px', boxSizing: 'border-box',
+                                    borderRadius: 8, border: `1px solid ${SAND}`,
+                                    background: 'white', color: OBSIDIAN, fontSize: 13, outline: 'none',
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => setEditingItemId(null)}
+                                style={{
+                                  padding: '7px 16px', borderRadius: 9, fontSize: 13, fontWeight: 600,
+                                  background: TABS_BG, border: `1px solid ${SAND}`, color: SECONDARY, cursor: 'pointer',
+                                }}>
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => saveMenuItemEdit(item.id)}
+                                disabled={menuBusy}
+                                style={{
+                                  padding: '7px 16px', borderRadius: 9, fontSize: 13, fontWeight: 700,
+                                  background: SAGE, border: 'none', color: 'white',
+                                  cursor: menuBusy ? 'not-allowed' : 'pointer', opacity: menuBusy ? 0.6 : 1,
+                                }}>
+                                {menuBusy ? '…' : 'Save'}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+
+                    {catItems.length === 0 && addCatId !== cat.id && (
+                      <div style={{
+                        borderRadius: 12, border: `1px dashed ${SAND}`,
+                        padding: '24px 0', textAlign: 'center',
+                        color: '#c4bfb8', fontSize: 13,
+                      }}>
+                        No items in this category
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
