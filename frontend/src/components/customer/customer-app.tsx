@@ -151,14 +151,37 @@ export function CustomerApp({ restaurant, table, categories, menuItems }: Props)
   // Realtime order tracking
   useEffect(() => {
     if (!orderId) return
-    const channel = supabase.channel(`order-${orderId}`)
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders', filter: `id=eq.${orderId}` },
-        (payload) => {
-          setOrderStatus(payload.new.status as OrderStatus)
-          localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`, payload.new.status)
-        })
+    const channel = supabase
+      .channel(`order-tracking-${orderId}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'orders',
+        filter: `id=eq.${orderId}`
+      }, (payload) => {
+        const newStatus = payload.new.status as OrderStatus
+        setOrderStatus(newStatus)
+        localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`, newStatus)
+      })
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+
+    // Fallback polling every 8 seconds in case realtime fails
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('orders')
+        .select('status')
+        .eq('id', orderId)
+        .single()
+      if (data) {
+        setOrderStatus(data.status as OrderStatus)
+        localStorage.setItem(`dineorder-${restaurant.id}-${table.id}-orderStatus`, data.status)
+      }
+    }, 8000)
+
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(interval)
+    }
   }, [orderId])
 
   useEffect(() => { setTable(restaurant.id, table.table_number) }, [restaurant.id, table.table_number])
